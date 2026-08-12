@@ -37,3 +37,4 @@ C:\Project\Warehouse\obj\Debug\net10.0\refint\Warehouse.dll
 C:\Project\Warehouse\obj\Debug\net10.0\Warehouse.pdb
 C:\Project\Warehouse\obj\Debug\net10.0\Warehouse.genruntimeconfig.cache
 C:\Project\Warehouse\obj\Debug\net10.0\ref\Warehouse.dll
+C:\Project\Warehouse\obj\Debug\net10.0\Warehouse.sourcelink.json
