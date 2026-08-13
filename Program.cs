@@ -18,7 +18,7 @@ var app = builder.Build();
 
 app.UseStaticFiles();
 
-app.MapGet("/", () => Results.Redirect("/Login/Login"));
+app.MapGet("/", () => Results.Redirect("/Login"));
 
 app.UseSession();
 
