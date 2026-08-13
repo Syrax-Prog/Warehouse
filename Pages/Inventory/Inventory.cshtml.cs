@@ -109,4 +109,37 @@ public class InventoryModel : PageModel
 
         return RedirectToPage("/Inventory/Inventory");
     }
+
+    public async Task<IActionResult> OnPostAddAsync(string name, int quantity, decimal price)
+    {
+        if (name == null || quantity < 1 || price <= 0)
+        {
+            HttpContext.Session.SetString("Message", "Invalid Data Inserted");
+            return RedirectToPage("/Inventory/Inventory");
+        }
+
+        // await _context.Items.CountAsync(x => x.quantity < 20);
+        var item = await _context.Items.FirstOrDefaultAsync(x => x.name == name);
+        if (item != null)
+        {
+            HttpContext.Session.SetString("Message", "Same Item Already Existed");
+            return RedirectToPage("/Inventory/Inventory");
+        }
+
+        item = new Item()
+        {
+            name = name,
+            quantity = quantity,
+            price = price,
+            createdate = DateTime.UtcNow,
+            createby = HttpContext.Session.GetString("name") ?? "Unknown",
+            updatedate = DateTime.UtcNow,
+            updateby = HttpContext.Session.GetString("name") ?? "Unknown"
+        };
+
+        _context.Items.Add(item);
+        await _context.SaveChangesAsync();
+
+        return RedirectToPage("/Inventory/Inventory");
+    }
 }

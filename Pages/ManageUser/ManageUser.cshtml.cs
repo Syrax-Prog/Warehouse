@@ -80,4 +80,33 @@ public class ManageUserModel : PageModel
 
         return RedirectToPage("/ManageUser/ManageUser");
     }
+
+    public async Task<IActionResult> OnPostAddAsync(string name, string email, string password, string role)
+    {
+        if (name == null || email == null || password == null || role == null)
+        {
+            HttpContext.Session.SetString("Message", "Invalid Data Inserted");
+            return RedirectToPage("/ManageUser/ManageUser");
+        }
+        
+        var user = await _context.Users.FirstOrDefaultAsync(x => EF.Functions.ILike(x.email, email));
+        if (user != null)
+        {
+            HttpContext.Session.SetString("Message", "Same Email Already Existed");
+            return RedirectToPage("/Inventory/Inventory");
+        }
+
+        user = new User()
+        {
+            name = name,
+            email = email,
+            password = password,
+            role = role
+        };
+
+        _context.Users.Add(user);
+        await _context.SaveChangesAsync();
+
+        return RedirectToPage("/ManageUser/ManageUser");
+    }
 }
