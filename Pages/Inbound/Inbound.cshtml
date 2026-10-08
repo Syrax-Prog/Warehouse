@@ -1,0 +1,679 @@
+@page "/Inbound"
+@model Warehouse.Pages.InboundModel
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <div>
+        <h1 class="h3 mb-0">Inbound</h1>
+        <p class="text-secondary mb-0 small">
+            Overview of incoming inventory
+        </p>
+    </div>
+
+    <button type="button" class="btn btn-warning text-dark fw-semibold" data-bs-toggle="modal"
+            data-bs-target="#addInboundModal">
+
+        <i class="bi bi-plus-lg"></i>
+        Add Inbound
+    </button>
+</div>
+
+<!-- Summary Cards -->
+<div class="row g-3 mb-4">
+
+    <!-- Total Inbounds -->
+    <div class="col-sm-6 col-lg-3">
+        <div class="card bg-dark border-secondary-subtle h-100">
+            <div class="card-body d-flex align-items-center gap-3">
+
+                <div class="rounded-3 bg-warning bg-opacity-10 p-2">
+                    <i class="bi bi-box-arrow-in-down text-warning fs-4"></i>
+                </div>
+
+                <div>
+                    <div class="text-secondary small">Total Inbounds</div>
+                    <div class="fs-4 fw-semibold">
+                        @Model.totalInbounds
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+
+    <!-- Pending -->
+    <div class="col-sm-6 col-lg-3">
+
+        <div class="card bg-dark border-secondary-subtle h-100">
+
+            <div class="card-body d-flex align-items-center gap-3">
+
+                <div class="rounded-3 bg-warning bg-opacity-10 p-2">
+                    <i class="bi bi-clock text-warning fs-4"></i>
+                </div>
+
+                <div>
+                    <div class="text-secondary small">Pending</div>
+
+                    <div class="fs-4 fw-semibold">
+                        @Model.pendingInbounds
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Received -->
+    <div class="col-sm-6 col-lg-3">
+
+        <div class="card bg-dark border-secondary-subtle h-100">
+
+            <div class="card-body d-flex align-items-center gap-3">
+
+                <div class="rounded-3 bg-success bg-opacity-10 p-2">
+                    <i class="bi bi-check-circle text-success fs-4"></i>
+                </div>
+
+                <div>
+                    <div class="text-secondary small">Received</div>
+
+                    <div class="fs-4 fw-semibold">
+                        @Model.receivedInbounds
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+
+    <!-- Total Units -->
+    <div class="col-sm-6 col-lg-3">
+
+        <div class="card bg-dark border-secondary-subtle h-100">
+
+            <div class="card-body d-flex align-items-center gap-3">
+
+                <div class="rounded-3 bg-info bg-opacity-10 p-2">
+                    <i class="bi bi-boxes text-info fs-4"></i>
+                </div>
+
+                <div>
+                    <div class="text-secondary small">Total Units</div>
+
+                    <div class="fs-4 fw-semibold">
+                        @Model.totalUnits
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+<!-- Message -->
+@if (HttpContext.Session.GetString("Message") != null)
+{
+    <div class="alert alert-warning alert-dismissible fade show d-flex align-items-center mb-4" role="alert">
+
+        <i class="bi bi-check-circle-fill me-2"></i>
+
+        <div>
+            @HttpContext.Session.GetString("Message")
+        </div>
+
+        <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close">
+        </button>
+
+    </div>
+
+    HttpContext.Session.Remove("Message");
+}
+
+
+<!-- No Inbound -->
+@if (!Model.inbounds.Any())
+{
+    <div class="text-center py-5">
+
+        <i class="bi bi-box-arrow-in-down display-4 text-secondary"></i>
+
+        <p class="text-secondary mt-3 mb-0">
+            No inbound records found.
+        </p>
+
+        <button type="button" class="btn btn-warning text-dark fw-semibold mt-3" data-bs-toggle="modal"
+                data-bs-target="#addInboundModal">
+
+            <i class="bi bi-plus-lg"></i>
+            Create your first inbound
+
+        </button>
+
+    </div>
+}
+else
+{
+    <!-- Inbound Table -->
+    <div class="card bg-dark border-secondary-subtle">
+
+        <div class="table-responsive">
+
+            <table id="inboundTable" class="table table-dark table-hover align-middle mb-0">
+
+                <thead>
+
+                    <tr class="text-secondary small text-uppercase">
+
+                        <th>ID</th>
+                        <th>Inbound No</th>
+                        <th>Product</th>
+                        <th>Supplier</th>
+                        <th>Quantity</th>
+                        <th>Reference No</th>
+                        <th>Status</th>
+                        <th>Received Date</th>
+                        <th>Action</th>
+
+                    </tr>
+
+                </thead>
+
+
+                <tbody>
+
+                    @foreach (var inbound in Model.inbounds)
+                    {
+                        <tr>
+
+                            <!-- ID -->
+                            <td class="text-secondary">
+                                #@inbound.id
+                            </td>
+
+
+                            <!-- Inbound Number -->
+                            <td class="fw-medium">
+                                @inbound.inbound_no
+                            </td>
+
+                            <!-- Product -->
+                            <td>
+                                @{
+                                    var inboundItemIds = Model.inbound_items
+                                        .Where(x => x.inbound_id == inbound.id)
+                                        .Select(x => x.item_id)
+                                        .ToList();
+
+                                    var productNames = Model.items
+                                        .Where(x => inboundItemIds.Contains(x.id))
+                                        .Select(x => x.name)
+                                        .ToList();
+                                }
+
+                                <ul class="mb-0 ps-3">
+                                    @foreach (var productName in productNames)
+                                    {
+                                        <li>@productName</li>
+                                    }
+                                </ul>
+                            </td>
+
+                            <!-- Supplier -->
+                            <td>
+                                @inbound.supplier
+                            </td>
+
+                            <!-- Quantity -->
+                            <td>
+                                @{
+                                    var totalQuantity = Model.inbound_items
+                                        .Where(x => x.inbound_id == inbound.id)
+                                        .Sum(x => x.quantity);
+                                }
+
+                                <span class="badge bg-info bg-opacity-75">
+                                    @totalQuantity
+                                </span>
+                            </td>
+
+                            <!-- Reference -->
+                            <td>
+                                @inbound.reference_no
+                            </td>
+
+
+                            <!-- Status -->
+                            <td>
+
+                                @if (inbound.status == "Received")
+                                {
+                                    <span class="badge bg-success">
+                                        <i class="bi bi-check-circle me-1"></i>
+                                        Received
+                                    </span>
+                                }
+                                else if (inbound.status == "Pending")
+                                {
+                                    <span class="badge bg-warning text-dark">
+                                        <i class="bi bi-clock me-1"></i>
+                                        Pending
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge bg-secondary">
+                                        @inbound.status
+                                    </span>
+                                }
+
+                            </td>
+
+
+                            <!-- Received Date -->
+                            <td class="text-secondary">
+                                @(inbound.received_date?.ToString("dd MMM yyyy") ?? "-")
+                            </td>
+
+                            <!-- Actions -->
+                            <td class="text-nowrap">
+
+                                <button type="button" class="btn btn-sm btn-warning me-1" data-bs-toggle="modal"
+                                        data-bs-target="#editInboundModal" data-id="@inbound.id"
+                                        data-inbound-no="@inbound.inbound_no" data-supplier="@inbound.supplier"
+                                        data-reference-no="@inbound.reference_no" data-quantity="0" data-status="@inbound.status">
+
+                                    <i class="bi bi-pencil"></i>
+                                    Edit
+
+                                </button>
+
+
+                                <form method="post" asp-page-handler="Delete" asp-route-id="@inbound.id" class="d-inline">
+
+                                    <button type="submit" class="btn btn-sm btn-danger"
+                                            onclick="return confirm('Are you sure you want to delete this inbound?');">
+
+                                        <i class="bi bi-trash"></i>
+                                        Delete
+
+                                    </button>
+
+                                </form>
+
+                            </td>
+
+                        </tr>
+                    }
+
+                </tbody>
+
+            </table>
+
+        </div>
+
+    </div>
+}
+
+
+<!-- ====================================================== -->
+<!-- EDIT INBOUND MODAL -->
+<!-- ====================================================== -->
+
+<div class="modal fade" id="editInboundModal" tabindex="-1" aria-labelledby="editInboundModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content bg-dark text-light border border-warning border-2">
+
+            <div class="modal-header border-secondary">
+
+                <h5 class="modal-title" id="editInboundModalLabel">
+
+                    <i class="bi bi-box-arrow-in-down text-warning me-2"></i>
+
+                    Edit Inbound
+
+                </h5>
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <form method="post" asp-page-handler="Edit">
+
+                <div class="modal-body">
+
+                    <input type="hidden" id="editInboundId" name="id" />
+
+
+                    <!-- Inbound No -->
+                    <div class="mb-3">
+
+                        <label for="editInboundNo" class="form-label">
+
+                            Inbound No
+
+                        </label>
+
+                        <input type="text" id="editInboundNo" name="inbound_no" class="form-control" required />
+
+                    </div>
+
+
+                    <!-- Supplier -->
+                    <div class="mb-3">
+
+                        <label for="editSupplier" class="form-label">
+
+                            Supplier
+
+                        </label>
+
+                        <input type="text" id="editSupplier" name="supplier" class="form-control" required />
+
+                    </div>
+
+
+                    <!-- Reference -->
+                    <div class="mb-3">
+
+                        <label for="editReferenceNo" class="form-label">
+
+                            Reference No
+
+                        </label>
+
+                        <input type="text" id="editReferenceNo" name="reference_no" class="form-control" />
+
+                    </div>
+
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+
+                        <label for="editQuantity" class="form-label">
+
+                            Quantity
+
+                        </label>
+
+                        <input type="number" id="editQuantity" name="quantity" class="form-control" min="1" required />
+
+                    </div>
+
+
+                    <!-- Status -->
+                    <div class="mb-3">
+
+                        <label for="editStatus" class="form-label">
+
+                            Status
+
+                        </label>
+
+                        <select id="editStatus" name="status" class="form-select">
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="Received">
+                                Received
+                            </option>
+
+                            <option value="Cancelled">
+                                Cancelled
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer border-secondary">
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="btn btn-warning text-dark fw-semibold">
+
+                        <i class="bi bi-check-lg me-1"></i>
+
+                        Save Changes
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+<!-- ====================================================== -->
+<!-- ADD INBOUND MODAL -->
+<!-- ====================================================== -->
+
+<div class="modal fade" id="addInboundModal" tabindex="-1" aria-labelledby="addInboundModalLabel" aria-hidden="true">
+
+    <div class="modal-dialog modal-dialog-centered">
+
+        <div class="modal-content bg-dark text-light border border-warning border-2">
+
+            <div class="modal-header border-secondary">
+
+                <h5 class="modal-title" id="addInboundModalLabel">
+
+                    <i class="bi bi-box-arrow-in-down text-warning me-2"></i>
+
+                    Add Inbound
+
+                </h5>
+
+
+                <button type="button" class="btn-close btn-close-white" data-bs-dismiss="modal" aria-label="Close">
+                </button>
+
+            </div>
+
+
+            <form method="post" asp-page-handler="Add">
+                <div class="modal-body">
+                    <!-- Inbound No -->
+                    <div class="mb-3">
+                        <label for="addInboundNo" class="form-label">Inbound No</label>
+                        <input type="text" id="addInboundNo" name="inbound_no" class="form-control" placeholder="INB-0001" required />
+                    </div>
+
+                    <!-- Product -->
+                    <div class="mb-3">
+                        <label for="addItemId" class="form-label">Product</label>
+                        <select id="addItemId" name="item_id" class="form-select" required>
+                            <option value="">Select product</option>
+                            @foreach (var item in Model.items)
+                                {
+                                    <option value="@item.id">@item.id | @item.name</option>
+                                }
+                        </select>
+                    </div>
+
+
+                    <!-- Supplier -->
+                    <div class="mb-3">
+                        <label for="addSupplier" class="form-label">Supplier</label>
+                        <select id="supplier" name="supplier" class="form-select" required>
+                            <option value="">Select Supplier</option>
+                            @foreach (var item in Model.suppliers)
+                                {
+                                    <option value="@item.id">@item.id | @item.supplier_name</option>
+                                }
+                        </select>
+                    </div>
+
+                    <!-- Reference -->
+                    <div class="mb-3">
+
+                        <label for="addReferenceNo" class="form-label">
+
+                            Reference No
+
+                        </label>
+
+                        <input type="text" id="addReferenceNo" name="reference_no" class="form-control"
+                               placeholder="PO-12345" />
+
+                    </div>
+
+
+                    <!-- Quantity -->
+                    <div class="mb-3">
+
+                        <label for="addQuantity" class="form-label">
+
+                            Quantity
+
+                        </label>
+
+                        <input type="number" id="addQuantity" name="quantity" class="form-control" min="1"
+                               placeholder="Enter received quantity" required />
+
+                    </div>
+
+
+                    <!-- Status -->
+                    <div class="mb-3">
+
+                        <label for="addStatus" class="form-label">
+
+                            Status
+
+                        </label>
+
+                        <select id="addStatus" name="status" class="form-select">
+
+                            <option value="Pending">
+                                Pending
+                            </option>
+
+                            <option value="Received">
+                                Received
+                            </option>
+
+                        </select>
+
+                    </div>
+
+                </div>
+
+
+                <div class="modal-footer border-secondary">
+
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">
+
+                        Cancel
+
+                    </button>
+
+
+                    <button type="submit" class="btn btn-warning text-dark fw-semibold">
+
+                        <i class="bi bi-plus-lg me-1"></i>
+
+                        Add Inbound
+
+                    </button>
+
+                </div>
+
+            </form>
+
+        </div>
+
+    </div>
+
+</div>
+
+
+
+@section Scripts {
+
+    <script>
+
+        new DataTable('#inboundTable');
+
+
+        const editInboundModal =
+            document.getElementById('editInboundModal');
+
+
+        editInboundModal.addEventListener('show.bs.modal', function (event) {
+
+            const button = event.relatedTarget;
+
+
+            const id =
+                button.getAttribute('data-id');
+
+            const inboundNo =
+                button.getAttribute('data-inbound-no');
+
+            const supplier =
+                button.getAttribute('data-supplier');
+
+            const referenceNo =
+                button.getAttribute('data-reference-no');
+
+            const quantity =
+                button.getAttribute('data-quantity');
+
+            const status =
+                button.getAttribute('data-status');
+
+
+            document.getElementById('editInboundId').value =
+                id;
+
+            document.getElementById('editInboundNo').value =
+                inboundNo;
+
+            document.getElementById('editSupplier').value =
+                supplier;
+
+            document.getElementById('editReferenceNo').value =
+                referenceNo;
+
+            document.getElementById('editQuantity').value =
+                quantity;
+
+            document.getElementById('editStatus').value =
+                status;
+
+        });
+
+    </script>
+
+}
